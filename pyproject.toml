@@ -1,0 +1,12 @@
+[project]
+name = "pm-day-simulator"
+version = "0.1.0"
+description = "Python simulation engine for an interactive product management day."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.161.1",
+    "uvicorn>=0.54.0",
+]
+
+[tool.uv]
+package = false

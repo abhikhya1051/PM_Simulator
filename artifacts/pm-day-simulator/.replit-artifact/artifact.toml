@@ -1,0 +1,45 @@
+kind = "web"
+previewPath = "/"
+title = "PM Day Simulator"
+description = "An interactive day-in-the-life product management simulation. Players review member demand, team capacity, and stakeholder input to decide whether to launch, pilot, or defer a new friendship community, then receive a balanced coaching debrief."
+version = "1.0.0"
+id = "artifacts/pm-day-simulator"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26226
+
+[services.development]
+run = "pnpm --filter @workspace/pm-day-simulator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pm-day-simulator", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pm-day-simulator/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26226"
+BASE_PATH = "/"
+
+[[services]]
+name = "simulation-engine"
+paths = [ "/pm-day-simulator-engine" ]
+localPort = 8000
+
+[services.development]
+run = "uv run --project . -- python -m uvicorn main:app --app-dir engine --host 0.0.0.0 --port 8000"
+
+[services.production.build]
+args = [ "uv", "sync", "--project", "." ]
+
+[services.production.run]
+args = [ "uv", "run", "--project", ".", "python", "-m", "uvicorn", "main:app", "--app-dir", "artifacts/pm-day-simulator/engine", "--host", "0.0.0.0", "--port", "8000" ]
+
+[services.production.health.startup]
+path = "/pm-day-simulator-engine/healthz"

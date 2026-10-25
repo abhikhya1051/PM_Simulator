@@ -1,0 +1,331 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: simulation
+    description: PM day simulation
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /simulation/scenario:
+    get:
+      operationId: getSimulationScenario
+      tags: [simulation]
+      summary: Get the opening PM simulation scenario
+      responses:
+        "200":
+          description: Scenario evidence and decision context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationScenario"
+  /simulation/evaluate:
+    post:
+      operationId: evaluateSimulationDecision
+      tags: [simulation]
+      summary: Evaluate a player's rollout decision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulationDecisionInput"
+      responses:
+        "200":
+          description: Balanced outcome and coaching recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationDecisionResult"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ScenarioFeedback:
+      type: object
+      properties:
+        quote:
+          type: string
+        theme:
+          type: string
+        source:
+          type: string
+      required: [quote, theme, source]
+    ScenarioMetric:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        change:
+          type: string
+        context:
+          type: string
+      required: [label, value, change, context]
+    ScenarioBacklogItem:
+      type: object
+      properties:
+        title:
+          type: string
+        owner:
+          type: string
+        estimate:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+      required: [title, owner, estimate, status, description]
+    ScenarioStakeholder:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        message:
+          type: string
+        tone:
+          type: string
+      required: [name, role, message, tone]
+    TimelineMoment:
+      type: object
+      properties:
+        id:
+          type: string
+        time:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+      required: [id, time, title, description]
+    ScenarioEvidenceCard:
+      type: object
+      properties:
+        id:
+          type: string
+          enum:
+            - member-demand
+            - member-voice
+            - member-support
+            - response-quality
+            - moderator-capacity
+            - delivery-readiness
+        category:
+          type: string
+          enum:
+            - memberNeed
+            - experienceHealth
+            - operationalReadiness
+            - deliveryReadiness
+        title:
+          type: string
+        signal:
+          type: string
+        interpretation:
+          type: string
+        source:
+          type: string
+      required: [id, category, title, signal, interpretation, source]
+    SimulationScenario:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        dayLabel:
+          type: string
+        openingNarrative:
+          type: string
+        demandCount:
+          type: integer
+        demandWindow:
+          type: string
+        demandSummary:
+          type: string
+        feedback:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioFeedback"
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioMetric"
+        capacitySummary:
+          type: string
+        capacitySignals:
+          type: array
+          items:
+            type: string
+        backlog:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioBacklogItem"
+        stakeholders:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioStakeholder"
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelineMoment"
+        evidenceCards:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioEvidenceCard"
+      required:
+        - id
+        - title
+        - dayLabel
+        - openingNarrative
+        - demandCount
+        - demandWindow
+        - demandSummary
+        - feedback
+        - metrics
+        - capacitySummary
+        - capacitySignals
+        - backlog
+        - stakeholders
+        - timeline
+        - evidenceCards
+    SimulationDecisionInput:
+      type: object
+      properties:
+        level:
+          type: string
+          enum: [early, tenured]
+        decision:
+          type: string
+          enum: [launch, pilot, defer]
+        safeguard:
+          type: string
+          enum: [moderatorCoverage, communityGuidelines, stagedAccess]
+        successMetric:
+          type: string
+          enum: [feltSupported, responseQuality, memberDemand]
+        communication:
+          type: string
+          enum: [clearPlan, briefUpdate]
+        evidenceIds:
+          type: array
+          items:
+            type: string
+            enum:
+              - member-demand
+              - member-voice
+              - member-support
+              - response-quality
+              - moderator-capacity
+              - delivery-readiness
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+      required:
+        - level
+        - decision
+        - safeguard
+        - successMetric
+        - communication
+        - evidenceIds
+    OutcomeMetric:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        value:
+          type: integer
+        direction:
+          type: string
+          enum: [positive, mixed, watch]
+        explanation:
+          type: string
+      required: [key, label, value, direction, explanation]
+    SimulationDecisionResult:
+      type: object
+      properties:
+        heading:
+          type: string
+        summary:
+          type: string
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutcomeMetric"
+        evaluationLayers:
+          type: array
+          items:
+            $ref: "#/components/schemas/DecisionEvaluationLayer"
+        strength:
+          type: string
+        recommendation:
+          type: string
+        levelCoaching:
+          type: string
+        nextStep:
+          type: string
+      required:
+        - heading
+        - summary
+        - metrics
+        - evaluationLayers
+        - strength
+        - recommendation
+        - levelCoaching
+        - nextStep
+    DecisionEvaluationLayer:
+      type: object
+      properties:
+        key:
+          type: string
+          enum: [problemFraming, evidenceBalance, readiness, execution]
+        label:
+          type: string
+        status:
+          type: string
+          enum: [strong, mixed, watch]
+        assessment:
+          type: string
+        evidenceUsed:
+          type: array
+          items:
+            type: string
+        whyItMatters:
+          type: string
+      required:
+        - key
+        - label
+        - status
+        - assessment
+        - evidenceUsed
+        - whyItMatters
+
